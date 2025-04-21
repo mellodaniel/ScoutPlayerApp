@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScoutPlayerApp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f2f2f2;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    input[type="text"] {
+      width: calc(100% - 110px);
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 10px;
+      font-size: 1rem;
+      margin-left: 10px;
+    }
+
+    .player {
+      margin-top: 2rem;
+    }
+
+    .player img {
+      width: 80px;
+      border-radius: 50%;
+    }
+
+    .stats {
+      margin-top: 1rem;
+    }
+
+    .stat {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ScoutPlayerApp</h1>
+    <div>
+      <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+      <button onclick="buscarJogador()">Buscar</button>
+    </div>
+    <div id="resultado" class="player"></div>
+  </div>
+
+  <script>
+    async function buscarJogador() {
+      const nome = document.getElementById("playerName").value.trim();
+      if (!nome) return alert("Digite um nome de jogador!");
+
+      const apiKey = "ce4cbe1f65f7af21897ba33e58fd9372";
+      const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=2023&league=307`;
+
+      const resposta = await fetch(url, {
+        headers: { "x-apisports-key": apiKey }
+      });
+
+      const data = await resposta.json();
+
+      const resultado = document.getElementById("resultado");
+      resultado.innerHTML = "";
+
+      if (!data.response || data.response.length === 0) {
+        resultado.innerHTML = "<p>Jogador não encontrado.</p>";
+        return;
+      }
+
+      const jogador = data.response[0].player;
+      const stats = data.response[0].statistics[0];
+
+      resultado.innerHTML = `
+        <div>
+          <img src="${jogador.photo}" alt="${jogador.name}">
+          <h2>${jogador.name}</h2>
+          <p><strong>Equipa:</strong> ${stats.team.name}</p>
+          <p><strong>Época:</strong> ${stats.league.season}</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>Posição:</strong> ${stats.games.position}</div>
+          <div class="stat"><strong>Jogos jogados:</strong> ${stats.games.appearences}</div>
+          <div class="stat"><strong>Minutos jogados:</strong> ${stats.games.minutes}</div>
+          <div class="stat"><strong>Gols:</strong> ${stats.goals.total}</div>
+          <div class="stat"><strong>Assistências:</strong> ${stats.goals.assists ?? 0}</div>
+          <div class="stat"><strong>Cartões amarelos:</strong> ${stats.cards.yellow}</div>
+          <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
