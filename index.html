@@ -116,12 +116,8 @@
         <option value="195">🇪🇨 Serie A (Equador)</option>
       </select>
 
-      <select id="seasonSelect">
-        <option value="2023">2023/2024</option>
-        <option value="2022">2022/2023</option>
-        <option value="2021">2021/2022</option>
-        <option value="2020">2020/2021</option>
-      </select>
+      <select id="seasonStart"></select>
+      <select id="seasonEnd"></select>
 
       <button onclick="buscarJogador()">Buscar</button>
     </div>
@@ -139,63 +135,75 @@
   </div>
 
   <script>
+    const seasonStart = document.getElementById("seasonStart");
+    const seasonEnd = document.getElementById("seasonEnd");
+    for (let y = 2023; y >= 2000; y--) {
+      seasonStart.innerHTML += `<option value="${y}">${y}</option>`;
+      seasonEnd.innerHTML += `<option value="${y}">${y}</option>`;
+    }
+    seasonStart.value = "2000";
+    seasonEnd.value = "2023";
+
     async function buscarJogador() {
       const nome = document.getElementById("playerName").value.trim();
-      const season = document.getElementById("seasonSelect").value;
+      const start = parseInt(document.getElementById("seasonStart").value);
+      const end = parseInt(document.getElementById("seasonEnd").value);
       const league = document.getElementById("leagueSelect").value;
       const spinner = document.getElementById("spinner");
       const resultado = document.getElementById("resultado");
 
-      if (!nome) return alert("Digite um nome de jogador!");
+      if (!nome || start > end) return alert("Verifique o nome e o intervalo de épocas.");
 
       spinner.style.display = "block";
       resultado.innerHTML = "";
 
       const apiKey = "ce4cbe1f65f7af21897ba33e58fd9372";
-      const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=${season}&league=${league}`;
+      let found = false;
 
-      try {
-        const resposta = await fetch(url, {
-          headers: { "x-apisports-key": apiKey }
-        });
+      for (let ano = end; ano >= start; ano--) {
+        const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=${ano}&league=${league}`;
+        try {
+          const resposta = await fetch(url, {
+            headers: { "x-apisports-key": apiKey }
+          });
 
-        const data = await resposta.json();
-        spinner.style.display = "none";
+          const data = await resposta.json();
+          if (data.response && data.response.length > 0) {
+            spinner.style.display = "none";
+            const jogador = data.response[0].player;
+            const stats = data.response[0].statistics[0];
 
-        if (!data.response || data.response.length === 0) {
-          resultado.innerHTML = `
-            <p style="color: red; text-align: center; font-weight: bold; margin-top: 20px;">
-              ⚠️ Nenhum jogador encontrado com esse nome nesta liga/época.
-            </p>`;
-          return;
+            resultado.innerHTML = `
+              <div>
+                <img src="${jogador.photo}" alt="${jogador.name}">
+                <h2>${jogador.name}</h2>
+                <p><strong>Equipa:</strong> ${stats.team.name}</p>
+                <p><strong>Época:</strong> ${stats.league.season}</p>
+              </div>
+              <div class="stats">
+                <div class="stat"><strong>Posição:</strong> ${stats.games.position}</div>
+                <div class="stat"><strong>Jogos jogados:</strong> ${stats.games.appearences}</div>
+                <div class="stat"><strong>Minutos jogados:</strong> ${stats.games.minutes}</div>
+                <div class="stat"><strong>Gols:</strong> ${stats.goals.total}</div>
+                <div class="stat"><strong>Assistências:</strong> ${stats.goals.assists ?? 0}</div>
+                <div class="stat"><strong>Cartões amarelos:</strong> ${stats.cards.yellow}</div>
+                <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
+              </div>
+            `;
+
+            buscarTopScorers(league, ano);
+            found = true;
+            break;
+          }
+        } catch (e) {
+          console.error("Erro ao buscar jogador na época", ano);
         }
+      }
 
-        const jogador = data.response[0].player;
-        const stats = data.response[0].statistics[0];
-
-        resultado.innerHTML = `
-          <div>
-            <img src="${jogador.photo}" alt="${jogador.name}">
-            <h2>${jogador.name}</h2>
-            <p><strong>Equipa:</strong> ${stats.team.name}</p>
-            <p><strong>Época:</strong> ${stats.league.season}</p>
-          </div>
-          <div class="stats">
-            <div class="stat"><strong>Posição:</strong> ${stats.games.position}</div>
-            <div class="stat"><strong>Jogos jogados:</strong> ${stats.games.appearences}</div>
-            <div class="stat"><strong>Minutos jogados:</strong> ${stats.games.minutes}</div>
-            <div class="stat"><strong>Gols:</strong> ${stats.goals.total}</div>
-            <div class="stat"><strong>Assistências:</strong> ${stats.goals.assists ?? 0}</div>
-            <div class="stat"><strong>Cartões amarelos:</strong> ${stats.cards.yellow}</div>
-            <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
-          </div>
-        `;
-
-        buscarTopScorers(league, season);
-
-      } catch (error) {
+      if (!found) {
         spinner.style.display = "none";
-        resultado.innerHTML = "<p style='color:red; text-align:center;'>Erro ao buscar jogador. Tenta novamente.</p>";
+        resultado.innerHTML = `<p style="color: red; text-align: center; font-weight: bold; margin-top: 20px;">
+          ⚠️ Nenhum jogador encontrado com esse nome neste intervalo.</p>`;
       }
     }
 
