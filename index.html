@@ -17,7 +17,7 @@
     }
 
     .container {
-      max-width: 600px;
+      max-width: 800px;
       margin: auto;
       background: white;
       padding: 2rem;
@@ -25,17 +25,9 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    input[type="text"], select {
+    input[type="text"] {
       padding: 10px;
       font-size: 1rem;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-
-    select {
       width: 100%;
       margin-bottom: 10px;
     }
@@ -44,23 +36,7 @@
       padding: 10px;
       font-size: 1rem;
       width: 100%;
-    }
-
-    .player {
-      margin-top: 2rem;
-    }
-
-    .player img {
-      width: 80px;
-      border-radius: 50%;
-    }
-
-    .stats {
-      margin-top: 1rem;
-    }
-
-    .stat {
-      margin: 5px 0;
+      margin-bottom: 20px;
     }
 
     .loader {
@@ -70,172 +46,138 @@
       width: 40px;
       height: 40px;
       animation: spin 1s linear infinite;
-      margin: auto;
+      margin: 20px auto;
     }
 
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table th, table td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    .player-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .player-header img {
+      width: 80px;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>ScoutPlayerApp</h1>
-    <div>
-      <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+    <input type="text" id="playerName" placeholder="Digite o nome do jogador">
+    <button onclick="buscarHistoricoJogador()">Buscar Histórico</button>
 
-      <select id="leagueSelect">
-        <option value="2">🏆 Champions League</option>
-        <option value="39">🏴 Premier League (Inglaterra)</option>
-        <option value="40">🏴 Championship (Inglaterra)</option>
-        <option value="41">🏴 League One (Inglaterra)</option>
-        <option value="42">🏴 League Two (Inglaterra)</option>
-        <option value="140">🇪🇸 La Liga</option>
-        <option value="141">🇪🇸 La Liga 2</option>
-        <option value="135">🇮🇹 Serie A</option>
-        <option value="136">🇮🇹 Serie B</option>
-        <option value="78">🇩🇪 Bundesliga</option>
-        <option value="79">🇩🇪 2. Bundesliga</option>
-        <option value="61">🇫🇷 Ligue 1</option>
-        <option value="62">🇫🇷 Ligue 2</option>
-        <option value="94">🇵🇹 Primeira Liga</option>
-        <option value="95">🇵🇹 Segunda Liga</option>
-        <option value="88">🇳🇱 Eredivisie</option>
-        <option value="144">🇳🇱 Eerste Divisie</option>
-        <option value="262">🇧🇪 Pro League</option>
-        <option value="71">🇧🇷 Brasileirão Série A</option>
-        <option value="72">🇧🇷 Brasileirão Série B</option>
-        <option value="128">🇦🇷 Liga Profesional</option>
-        <option value="129">🇦🇷 Primera B Nacional</option>
-        <option value="235">🇺🇾 Primera División (Uruguai)</option>
-        <option value="197">🇨🇱 Primera División (Chile)</option>
-        <option value="194">🇨🇴 Primera A (Colômbia)</option>
-        <option value="199">🇵🇾 Primera División (Paraguai)</option>
-        <option value="203">🇵🇪 Liga 1 (Peru)</option>
-        <option value="195">🇪🇨 Serie A (Equador)</option>
-      </select>
-
-      <select id="seasonStart"></select>
-      <select id="seasonEnd"></select>
-
-      <button onclick="buscarJogador()">Buscar</button>
-    </div>
-
-    <div id="spinner" style="display: none; text-align: center; margin-top: 20px;">
+    <div id="spinner" style="display: none; text-align: center;">
       <div class="loader"></div>
     </div>
 
-    <div id="resultado" class="player"></div>
-
-    <div id="ligaStats" style="margin-top: 40px;">
-      <h2 style="text-align:center;">📊 Estatísticas da Liga: Top Scorers</h2>
-      <div id="topScorers"></div>
-    </div>
+    <div id="resultado"></div>
   </div>
 
   <script>
-    const seasonStart = document.getElementById("seasonStart");
-    const seasonEnd = document.getElementById("seasonEnd");
-    for (let y = 2023; y >= 2000; y--) {
-      seasonStart.innerHTML += `<option value="${y}">${y}</option>`;
-      seasonEnd.innerHTML += `<option value="${y}">${y}</option>`;
-    }
-    seasonStart.value = "2000";
-    seasonEnd.value = "2023";
-
-    async function buscarJogador() {
+    async function buscarHistoricoJogador() {
       const nome = document.getElementById("playerName").value.trim();
-      const start = parseInt(document.getElementById("seasonStart").value);
-      const end = parseInt(document.getElementById("seasonEnd").value);
-      const league = document.getElementById("leagueSelect").value;
-      const spinner = document.getElementById("spinner");
       const resultado = document.getElementById("resultado");
-
-      if (!nome || start > end) return alert("Verifique o nome e o intervalo de épocas.");
-
-      spinner.style.display = "block";
+      const spinner = document.getElementById("spinner");
       resultado.innerHTML = "";
 
+      if (!nome) return alert("Digite um nome de jogador!");
+
+      spinner.style.display = "block";
+
       const apiKey = "ce4cbe1f65f7af21897ba33e58fd9372";
-      let found = false;
-
-      for (let ano = end; ano >= start; ano--) {
-        const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=${ano}&league=${league}`;
-        try {
-          const resposta = await fetch(url, {
-            headers: { "x-apisports-key": apiKey }
-          });
-
-          const data = await resposta.json();
-          if (data.response && data.response.length > 0) {
-            spinner.style.display = "none";
-            const jogador = data.response[0].player;
-            const stats = data.response[0].statistics[0];
-
-            resultado.innerHTML = `
-              <div>
-                <img src="${jogador.photo}" alt="${jogador.name}">
-                <h2>${jogador.name}</h2>
-                <p><strong>Equipa:</strong> ${stats.team.name}</p>
-                <p><strong>Época:</strong> ${stats.league.season}</p>
-              </div>
-              <div class="stats">
-                <div class="stat"><strong>Posição:</strong> ${stats.games.position}</div>
-                <div class="stat"><strong>Jogos jogados:</strong> ${stats.games.appearences}</div>
-                <div class="stat"><strong>Minutos jogados:</strong> ${stats.games.minutes}</div>
-                <div class="stat"><strong>Gols:</strong> ${stats.goals.total}</div>
-                <div class="stat"><strong>Assistências:</strong> ${stats.goals.assists ?? 0}</div>
-                <div class="stat"><strong>Cartões amarelos:</strong> ${stats.cards.yellow}</div>
-                <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
-              </div>
-            `;
-
-            buscarTopScorers(league, ano);
-            found = true;
-            break;
-          }
-        } catch (e) {
-          console.error("Erro ao buscar jogador na época", ano);
-        }
-      }
-
-      if (!found) {
-        spinner.style.display = "none";
-        resultado.innerHTML = `<p style="color: red; text-align: center; font-weight: bold; margin-top: 20px;">
-          ⚠️ Nenhum jogador encontrado com esse nome neste intervalo.</p>`;
-      }
-    }
-
-    async function buscarTopScorers(league, season) {
-      const topScorersDiv = document.getElementById("topScorers");
-      topScorersDiv.innerHTML = "<p style='text-align:center;'>Carregando artilheiros...</p>";
-
-      const url = `https://v3.football.api-sports.io/players/topscorers?season=${season}&league=${league}`;
+      const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}`;
 
       try {
         const resposta = await fetch(url, {
-          headers: { "x-apisports-key": "ce4cbe1f65f7af21897ba33e58fd9372" }
+          headers: { "x-apisports-key": apiKey }
         });
 
         const data = await resposta.json();
 
         if (!data.response || data.response.length === 0) {
-          topScorersDiv.innerHTML = "<p style='text-align:center;'>Nenhum artilheiro disponível.</p>";
+          spinner.style.display = "none";
+          resultado.innerHTML = `<p style='color:red; text-align:center;'>⚠️ Jogador não encontrado.</p>`;
           return;
         }
 
-        const top5 = data.response.slice(0, 5);
+        const jogador = data.response[0].player;
+        const estatisticas = data.response[0].statistics;
 
-        topScorersDiv.innerHTML = top5.map((j, i) => `
-          <div style="margin-bottom: 10px; text-align: center;">
-            <strong>#${i + 1}</strong> ${j.player.name} (${j.statistics[0].team.name}) - 
-            <strong>${j.statistics[0].goals.total}</strong> gols
+        let html = `
+          <div class="player-header">
+            <img src="${jogador.photo}" alt="${jogador.name}">
+            <div>
+              <h2>${jogador.name}</h2>
+              <p><strong>Nacionalidade:</strong> ${jogador.nationality}</p>
+              <p><strong>Altura:</strong> ${jogador.height}</p>
+              <p><strong>Peso:</strong> ${jogador.weight}</p>
+              <p><strong>Nascimento:</strong> ${jogador.birth.date} (${jogador.birth.country})</p>
+            </div>
           </div>
-        `).join("");
+        `;
+
+        html += `
+          <table>
+            <thead>
+              <tr>
+                <th>Época</th>
+                <th>Liga</th>
+                <th>Equipa</th>
+                <th>Posição</th>
+                <th>Jogos</th>
+                <th>Minutos</th>
+                <th>Gols</th>
+                <th>Assistências</th>
+                <th>Cart. Amarelos</th>
+                <th>Cart. Vermelhos</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        estatisticas.forEach(stat => {
+          html += `
+            <tr>
+              <td>${stat.league.season}</td>
+              <td>${stat.league.name}</td>
+              <td>${stat.team.name}</td>
+              <td>${stat.games.position}</td>
+              <td>${stat.games.appearences ?? '-'}</td>
+              <td>${stat.games.minutes ?? '-'}</td>
+              <td>${stat.goals.total ?? 0}</td>
+              <td>${stat.goals.assists ?? 0}</td>
+              <td>${stat.cards.yellow ?? 0}</td>
+              <td>${stat.cards.red ?? 0}</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table>`;
+        spinner.style.display = "none";
+        resultado.innerHTML = html;
 
       } catch (error) {
-        topScorersDiv.innerHTML = "<p style='color:red; text-align:center;'>Erro ao carregar top scorers.</p>";
+        spinner.style.display = "none";
+        resultado.innerHTML = `<p style='color:red; text-align:center;'>Erro ao buscar dados do jogador.</p>`;
       }
     }
   </script>
