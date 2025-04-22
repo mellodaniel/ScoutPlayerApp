@@ -59,6 +59,21 @@
     .stat {
       margin: 5px 0;
     }
+
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #333;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -76,6 +91,11 @@
 
       <button onclick="buscarJogador()">Buscar</button>
     </div>
+
+    <div id="spinner" style="display: none; text-align: center; margin-top: 20px;">
+      <div class="loader"></div>
+    </div>
+
     <div id="resultado" class="player"></div>
   </div>
 
@@ -83,45 +103,54 @@
     async function buscarJogador() {
       const nome = document.getElementById("playerName").value.trim();
       const season = document.getElementById("seasonSelect").value;
+      const spinner = document.getElementById("spinner");
+      const resultado = document.getElementById("resultado");
+
       if (!nome) return alert("Digite um nome de jogador!");
+
+      spinner.style.display = "block";
+      resultado.innerHTML = "";
 
       const apiKey = "ce4cbe1f65f7af21897ba33e58fd9372";
       const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=${season}&league=307`;
 
-      const resposta = await fetch(url, {
-        headers: { "x-apisports-key": apiKey }
-      });
+      try {
+        const resposta = await fetch(url, {
+          headers: { "x-apisports-key": apiKey }
+        });
 
-      const data = await resposta.json();
+        const data = await resposta.json();
+        spinner.style.display = "none";
 
-      const resultado = document.getElementById("resultado");
-      resultado.innerHTML = "";
+        if (!data.response || data.response.length === 0) {
+          resultado.innerHTML = "<p>Jogador não encontrado.</p>";
+          return;
+        }
 
-      if (!data.response || data.response.length === 0) {
-        resultado.innerHTML = "<p>Jogador não encontrado.</p>";
-        return;
+        const jogador = data.response[0].player;
+        const stats = data.response[0].statistics[0];
+
+        resultado.innerHTML = `
+          <div>
+            <img src="${jogador.photo}" alt="${jogador.name}">
+            <h2>${jogador.name}</h2>
+            <p><strong>Equipa:</strong> ${stats.team.name}</p>
+            <p><strong>Época:</strong> ${stats.league.season}</p>
+          </div>
+          <div class="stats">
+            <div class="stat"><strong>Posição:</strong> ${stats.games.position}</div>
+            <div class="stat"><strong>Jogos jogados:</strong> ${stats.games.appearences}</div>
+            <div class="stat"><strong>Minutos jogados:</strong> ${stats.games.minutes}</div>
+            <div class="stat"><strong>Gols:</strong> ${stats.goals.total}</div>
+            <div class="stat"><strong>Assistências:</strong> ${stats.goals.assists ?? 0}</div>
+            <div class="stat"><strong>Cartões amarelos:</strong> ${stats.cards.yellow}</div>
+            <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
+          </div>
+        `;
+      } catch (error) {
+        spinner.style.display = "none";
+        resultado.innerHTML = "<p>Erro ao buscar jogador. Tenta novamente.</p>";
       }
-
-      const jogador = data.response[0].player;
-      const stats = data.response[0].statistics[0];
-
-      resultado.innerHTML = `
-        <div>
-          <img src="${jogador.photo}" alt="${jogador.name}">
-          <h2>${jogador.name}</h2>
-          <p><strong>Equipa:</strong> ${stats.team.name}</p>
-          <p><strong>Época:</strong> ${stats.league.season}</p>
-        </div>
-        <div class="stats">
-          <div class="stat"><strong>Posição:</strong> ${stats.games.position}</div>
-          <div class="stat"><strong>Jogos jogados:</strong> ${stats.games.appearences}</div>
-          <div class="stat"><strong>Minutos jogados:</strong> ${stats.games.minutes}</div>
-          <div class="stat"><strong>Gols:</strong> ${stats.goals.total}</div>
-          <div class="stat"><strong>Assistências:</strong> ${stats.goals.assists ?? 0}</div>
-          <div class="stat"><strong>Cartões amarelos:</strong> ${stats.cards.yellow}</div>
-          <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
-        </div>
-      `;
     }
   </script>
 </body>
