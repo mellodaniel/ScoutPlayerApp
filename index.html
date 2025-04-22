@@ -30,17 +30,19 @@
     }
 
     input[type="text"] {
-      width: calc(100% - 240px);
-      margin-right: 10px;
+      width: 100%;
+      margin-bottom: 10px;
     }
 
     select {
-      margin-right: 10px;
+      width: 100%;
+      margin-bottom: 10px;
     }
 
     button {
       padding: 10px;
       font-size: 1rem;
+      width: 100%;
     }
 
     .player {
@@ -82,6 +84,48 @@
     <div>
       <input type="text" id="playerName" placeholder="Digite o nome do jogador">
 
+      <select id="leagueSelect">
+        <option value="2">🏆 Champions League</option>
+
+        <option value="39">🏴 Premier League (Inglaterra)</option>
+        <option value="40">🏴 Championship (Inglaterra)</option>
+        <option value="41">🏴 League One (Inglaterra)</option>
+        <option value="42">🏴 League Two (Inglaterra)</option>
+
+        <option value="140">🇪🇸 La Liga</option>
+        <option value="141">🇪🇸 La Liga 2</option>
+
+        <option value="135">🇮🇹 Serie A</option>
+        <option value="136">🇮🇹 Serie B</option>
+
+        <option value="78">🇩🇪 Bundesliga</option>
+        <option value="79">🇩🇪 2. Bundesliga</option>
+
+        <option value="61">🇫🇷 Ligue 1</option>
+        <option value="62">🇫🇷 Ligue 2</option>
+
+        <option value="94">🇵🇹 Primeira Liga</option>
+        <option value="95">🇵🇹 Segunda Liga</option>
+
+        <option value="88">🇳🇱 Eredivisie</option>
+        <option value="144">🇳🇱 Eerste Divisie</option>
+
+        <option value="262">🇧🇪 Pro League</option>
+
+        <option value="71">🇧🇷 Brasileirão Série A</option>
+        <option value="72">🇧🇷 Brasileirão Série B</option>
+
+        <option value="128">🇦🇷 Liga Profesional</option>
+        <option value="129">🇦🇷 Primera B Nacional</option>
+
+        <option value="235">🇺🇾 Primera División (Uruguai)</option>
+        <option value="197">🇨🇱 Primera División (Chile)</option>
+        <option value="194">🇨🇴 Primera A (Colômbia)</option>
+        <option value="199">🇵🇾 Primera División (Paraguai)</option>
+        <option value="203">🇵🇪 Liga 1 (Peru)</option>
+        <option value="195">🇪🇨 Serie A (Equador)</option>
+      </select>
+
       <select id="seasonSelect">
         <option value="2023">2023/2024</option>
         <option value="2022">2022/2023</option>
@@ -103,6 +147,7 @@
     async function buscarJogador() {
       const nome = document.getElementById("playerName").value.trim();
       const season = document.getElementById("seasonSelect").value;
+      const league = document.getElementById("leagueSelect").value;
       const spinner = document.getElementById("spinner");
       const resultado = document.getElementById("resultado");
 
@@ -112,7 +157,7 @@
       resultado.innerHTML = "";
 
       const apiKey = "ce4cbe1f65f7af21897ba33e58fd9372";
-      const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=${season}&league=307`;
+      const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(nome)}&season=${season}&league=${league}`;
 
       try {
         const resposta = await fetch(url, {
@@ -155,4 +200,4 @@
   </script>
 </body>
 </html>
-
+ 
