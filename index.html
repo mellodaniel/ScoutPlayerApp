@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ScoutPlayerApp</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/857/857681.png" type="image/png">
+  <title>⚽ ScoutPlayerApp</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -86,38 +87,27 @@
 
       <select id="leagueSelect">
         <option value="2">🏆 Champions League</option>
-
         <option value="39">🏴 Premier League (Inglaterra)</option>
         <option value="40">🏴 Championship (Inglaterra)</option>
         <option value="41">🏴 League One (Inglaterra)</option>
         <option value="42">🏴 League Two (Inglaterra)</option>
-
         <option value="140">🇪🇸 La Liga</option>
         <option value="141">🇪🇸 La Liga 2</option>
-
         <option value="135">🇮🇹 Serie A</option>
         <option value="136">🇮🇹 Serie B</option>
-
         <option value="78">🇩🇪 Bundesliga</option>
         <option value="79">🇩🇪 2. Bundesliga</option>
-
         <option value="61">🇫🇷 Ligue 1</option>
         <option value="62">🇫🇷 Ligue 2</option>
-
         <option value="94">🇵🇹 Primeira Liga</option>
         <option value="95">🇵🇹 Segunda Liga</option>
-
         <option value="88">🇳🇱 Eredivisie</option>
         <option value="144">🇳🇱 Eerste Divisie</option>
-
         <option value="262">🇧🇪 Pro League</option>
-
         <option value="71">🇧🇷 Brasileirão Série A</option>
         <option value="72">🇧🇷 Brasileirão Série B</option>
-
         <option value="128">🇦🇷 Liga Profesional</option>
         <option value="129">🇦🇷 Primera B Nacional</option>
-
         <option value="235">🇺🇾 Primera División (Uruguai)</option>
         <option value="197">🇨🇱 Primera División (Chile)</option>
         <option value="194">🇨🇴 Primera A (Colômbia)</option>
@@ -141,6 +131,11 @@
     </div>
 
     <div id="resultado" class="player"></div>
+
+    <div id="ligaStats" style="margin-top: 40px;">
+      <h2 style="text-align:center;">📊 Estatísticas da Liga: Top Scorers</h2>
+      <div id="topScorers"></div>
+    </div>
   </div>
 
   <script>
@@ -168,7 +163,10 @@
         spinner.style.display = "none";
 
         if (!data.response || data.response.length === 0) {
-          resultado.innerHTML = "<p>Jogador não encontrado.</p>";
+          resultado.innerHTML = `
+            <p style="color: red; text-align: center; font-weight: bold; margin-top: 20px;">
+              ⚠️ Nenhum jogador encontrado com esse nome nesta liga/época.
+            </p>`;
           return;
         }
 
@@ -192,9 +190,44 @@
             <div class="stat"><strong>Cartões vermelhos:</strong> ${stats.cards.red}</div>
           </div>
         `;
+
+        buscarTopScorers(league, season);
+
       } catch (error) {
         spinner.style.display = "none";
-        resultado.innerHTML = "<p>Erro ao buscar jogador. Tenta novamente.</p>";
+        resultado.innerHTML = "<p style='color:red; text-align:center;'>Erro ao buscar jogador. Tenta novamente.</p>";
+      }
+    }
+
+    async function buscarTopScorers(league, season) {
+      const topScorersDiv = document.getElementById("topScorers");
+      topScorersDiv.innerHTML = "<p style='text-align:center;'>Carregando artilheiros...</p>";
+
+      const url = `https://v3.football.api-sports.io/players/topscorers?season=${season}&league=${league}`;
+
+      try {
+        const resposta = await fetch(url, {
+          headers: { "x-apisports-key": "ce4cbe1f65f7af21897ba33e58fd9372" }
+        });
+
+        const data = await resposta.json();
+
+        if (!data.response || data.response.length === 0) {
+          topScorersDiv.innerHTML = "<p style='text-align:center;'>Nenhum artilheiro disponível.</p>";
+          return;
+        }
+
+        const top5 = data.response.slice(0, 5);
+
+        topScorersDiv.innerHTML = top5.map((j, i) => `
+          <div style="margin-bottom: 10px; text-align: center;">
+            <strong>#${i + 1}</strong> ${j.player.name} (${j.statistics[0].team.name}) - 
+            <strong>${j.statistics[0].goals.total}</strong> gols
+          </div>
+        `).join("");
+
+      } catch (error) {
+        topScorersDiv.innerHTML = "<p style='color:red; text-align:center;'>Erro ao carregar top scorers.</p>";
       }
     }
   </script>
